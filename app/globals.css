@@ -1,1 +1,67 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Colors - Base */
+    --color-base-white: #FAFAF8;
+    --color-bg-warm-gray: #F5F3F0;
+
+    /* Colors - Text */
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #6b6b67;
+
+    /* Colors - Accent */
+    --color-accent-primary: #D77D5F;
+    --color-accent-secondary: #9B8B7E;
+    --color-accent-terracotta: #C97856;
+
+    /* Colors - State */
+    --color-success: #7CB342;
+    --color-error: #E53935;
+    --color-warning: #F57C00;
+    --color-info: #1976D2;
+  }
+
+  /* Light Theme (Default) */
+  body {
+    @apply bg-white text-gray-900;
+    background-color: var(--color-base-white);
+    color: var(--color-text-primary);
+  }
+
+  /* Typography Scales */
+  h1 {
+    @apply text-4xl font-semibold leading-tight;
+    font-size: 32px;
+    line-height: 1.4;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold leading-relaxed;
+    font-size: 24px;
+    line-height: 1.35;
+  }
+
+  h3 {
+    @apply text-xl font-semibold leading-relaxed;
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  p {
+    @apply text-lg leading-relaxed;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+
+  small, .text-sm {
+    @apply text-base leading-relaxed;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .text-xs, .text-caption {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+}
