@@ -1,17 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Validation: Check required environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-// クライアント側用
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
+}
+if (!supabasePublishableKey) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
+}
 
-// サーバー側用 (Service Role キー使用) - サーバーサイドのみで使用
+// Browser Client (Publishable Key + RLS)
+export const supabase = createClient(supabaseUrl, supabasePublishableKey);
+
+// Server Admin Client (Secret Key only - server-side only)
 let supabaseAdmin: any;
-if (typeof window === 'undefined' && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+if (typeof window === 'undefined' && process.env.SUPABASE_SECRET_KEY) {
   supabaseAdmin = createClient(
     supabaseUrl,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
+    process.env.SUPABASE_SECRET_KEY
   );
 }
 export { supabaseAdmin };

@@ -6,7 +6,7 @@ const client = new Anthropic({
 });
 
 // 修正5: モデル名と料金を環境変数から管理
-const MODEL = process.env.CLAUDE_API_MODEL || 'claude-3-5-sonnet-20241022';
+const MODEL = process.env.CLAUDE_API_MODEL || 'claude-sonnet-5';
 
 interface ClaudeApiResponse {
   content: string;

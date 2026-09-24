@@ -289,4 +289,31 @@ export default function AudiencePage() {
       </div>
     </div>
   );
+
+function getAgeLabel(age: string): string {
+  const labels: Record<string, string> = {
+    '20s': '20代',
+    '30s': '30代',
+    '40s': '40代',
+    '50s': '50代',
+    '60s': '60代',
+    '70s+': '70代以上',
+    'mixed': '混合年代（20〜70代）',
+  };
+  return labels[age] || age;
+}
+
+}
+
+function getAgeLabel(age: string): string {
+  const labels: Record<string, string> = {
+    '20s': '20代',
+    '30s': '30代',
+    '40s': '40代',
+    '50s': '50代',
+    '60s': '60代',
+    '70s+': '70代以上',
+    'mixed': '混合年代（20〜70代）',
+  };
+  return labels[age] || age;
 }

@@ -13,6 +13,7 @@ export default function ConfirmPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isInitializing, setIsInitializing] = useState(true);
+  const [debugError, setDebugError] = useState<any>(null);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -49,14 +50,59 @@ export default function ConfirmPage() {
     if (!session) return;
 
     setLoading(true);
+    setDebugError(null);
     try {
-      // Create Account first
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setError('ユーザーが見つかりません');
         return;
       }
 
+      // Ensure user exists in public.users (sync auth.users -> public.users)
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .limit(1);
+
+      if (checkError) {
+        console.error('Supabase SELECT users error:', checkError);
+        setDebugError({
+          operation: 'SELECT users (sync check)',
+          message: checkError.message,
+          code: checkError.code,
+          details: checkError.details,
+          hint: checkError.hint,
+        });
+        throw checkError;
+      }
+
+      // If user doesn't exist in public.users, create it (backfill)
+      if (!existingUser || existingUser.length === 0) {
+        const { error: createUserError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: user.id,
+              email: user.email || '',
+            },
+          ]);
+
+        if (createUserError) {
+          console.error('Supabase INSERT users error:', createUserError);
+          setDebugError({
+            operation: 'INSERT users (sync backfill)',
+            message: createUserError.message,
+            code: createUserError.code,
+            details: createUserError.details,
+            hint: createUserError.hint,
+          });
+          throw createUserError;
+        }
+      }
+
+      // Now create Account
       const { data: accountData, error: accountError } = await supabase
         .from('accounts')
         .insert([
@@ -68,7 +114,17 @@ export default function ConfirmPage() {
         ])
         .select();
 
-      if (accountError) throw accountError;
+      if (accountError) {
+        console.error('Supabase INSERT accounts error:', accountError);
+        setDebugError({
+          operation: 'INSERT accounts',
+          message: accountError.message,
+          code: accountError.code,
+          details: accountError.details,
+          hint: accountError.hint,
+        });
+        throw accountError;
+      }
 
       const accountId = accountData[0].id;
 
@@ -80,11 +136,22 @@ export default function ConfirmPage() {
         })
         .eq('id', session.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Supabase UPDATE onboarding_sessions error:', updateError);
+        setDebugError({
+          operation: 'UPDATE onboarding_sessions',
+          message: updateError.message,
+          code: updateError.code,
+          details: updateError.details,
+          hint: updateError.hint,
+        });
+        throw updateError;
+      }
 
       // Redirect to strategy generation
       router.push('/onboarding/strategy');
-    } catch {
+    } catch (err: any) {
+      console.error('Full error object:', err);
       setError('確認に失敗しました。もう一度試してください。');
     } finally {
       setLoading(false);
@@ -158,7 +225,7 @@ export default function ConfirmPage() {
               届けたい相手
             </p>
             <p style={{ color: 'var(--color-text-primary)' }} className="text-lg">
-              {session.target_age_group} 代・{getGenderLabel(session.target_gender)}
+              {getAgeDisplay(session.target_age_group)}・{getGenderLabel(session.target_gender)}
             </p>
             <p style={{ color: 'var(--color-text-primary)' }} className="text-base mt-2">
               {session.target_pain_point}
@@ -190,8 +257,20 @@ export default function ConfirmPage() {
       </div>
 
       {error && (
-        <div style={{ backgroundColor: '#FFEBEE', borderColor: '#EF5350', color: '#C62828' }} className="rounded-lg border px-4 py-3 mb-6 text-base">
-          {error}
+        <div>
+          <div style={{ backgroundColor: '#FFEBEE', borderColor: '#EF5350', color: '#C62828' }} className="rounded-lg border px-4 py-3 mb-6 text-base">
+            {error}
+          </div>
+          {debugError && (
+            <div style={{ backgroundColor: '#FFF3E0', borderColor: '#FF9800', color: '#E65100' }} className="rounded-lg border px-4 py-3 mb-6 text-sm">
+              <p className="font-semibold mb-2">🔍 エラー詳細：</p>
+              {debugError.operation && <p><strong>処理:</strong> {debugError.operation}</p>}
+              {debugError.message && <p><strong>Message:</strong> {debugError.message}</p>}
+              {debugError.code && <p><strong>Code:</strong> {debugError.code}</p>}
+              {debugError.details && <p><strong>Details:</strong> {debugError.details}</p>}
+              {debugError.hint && <p><strong>Hint:</strong> {debugError.hint}</p>}
+            </div>
+          )}
         </div>
       )}
 
@@ -242,6 +321,19 @@ function getGenreLabel(genre: string | null): string {
     other: 'その他',
   };
   return labels[genre || ''] || '';
+}
+
+function getAgeDisplay(age: string | null): string {
+  const labels: Record<string, string> = {
+    '20s': '20代',
+    '30s': '30代',
+    '40s': '40代',
+    '50s': '50代',
+    '60s': '60代',
+    '70s+': '70代以上',
+    'mixed': '20〜70代',
+  };
+  return labels[age || ''] || age || '';
 }
 
 function getGenderLabel(gender: string | null): string {

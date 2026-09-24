@@ -16,22 +16,105 @@ export interface Account {
   updated_at: string;
 }
 
-// Account Strategy
+// ============================================================================
+// Account Strategy - Phase 2.1 Enhanced
+// ============================================================================
+
+// Brand / Positioning
+export interface BrandPositioning {
+  account_concept: string;
+  positioning: string;
+  target_problem: string;
+  value_proposition: string;
+  differentiation: string;
+  creator_strength: string;
+}
+
+// Persona Details
+export interface PersonaDetails {
+  persona_name: string;
+  age: string;
+  lifestyle: string;
+  situation: string;
+  frustrations: string[];
+  desires: string[];
+  information_needs: string[];
+  social_media_behavior: string;
+  follow_reason: string;
+}
+
+// Account Naming
+export interface AccountNaming {
+  account_name_candidates: string[];
+  account_name_rationales: string[];
+  display_name_candidates: string[];
+  username_candidates: string[];
+}
+
+// Profile
+export interface ProfileStrategy {
+  profile_bio_candidates: string[];
+  profile_image_direction: string;
+  cta: string;
+}
+
+// Content Pillar Details
+export interface ContentPillarDetail {
+  name: string;
+  purpose: string;
+  audience_need: string;
+  content_examples: string[];
+  recommended_format: string;
+  content_ratio: number;
+  primary_kpi: string;
+}
+
+// Visual Identity
+export interface VisualIdentity {
+  visual_keywords: string[];
+  color_direction: string;
+  photo_direction: string;
+  reel_direction: string;
+  carousel_direction: string;
+  typography_direction: string;
+}
+
+// First 30 Days Seed Idea
+export interface SeedIdea {
+  title: string;
+  objective: string;
+  content_pillar: string;
+  recommended_format: string;
+  audience_need: string;
+  day_of_week?: string; // 投稿予定曜日（例：月、水、金）
+}
+
+// Main Account Strategy (Phase 2.1)
 export interface AccountStrategy {
   id: string;
   account_id: string;
+
+  // Phase 1 (Original)
   concept: string;
   target_audience: Record<string, string | number | boolean>;
-  persona: Record<string, string | number>;
-  content_pillars: string[]; // ["ピラー1", "ピラー2", ...]
   posting_frequency: string;
   tone_and_manner: Record<string, string>;
-  visual_direction: string;
   kpi: Record<string, number | string>;
   monetization_candidates: string[];
-  reference_accounts: string[]; // ["@user1", "https://..."]
-  purpose: string; // 'awareness', 'followers', 'traffic', 'sales', 'affiliate', 'influencer'
-  genre: string; // 'fashion', 'beauty', 'travel', 'food', 'lifestyle', 'health', 'business', 'other'
+  reference_accounts: string[];
+  purpose: string;
+  genre: string;
+
+  // Phase 2.1 (New)
+  editorial_summary?: string;
+  brand_positioning?: BrandPositioning;
+  persona_details?: PersonaDetails;
+  account_naming?: AccountNaming;
+  profile_strategy?: ProfileStrategy;
+  content_pillars_detailed?: ContentPillarDetail[];
+  visual_identity?: VisualIdentity;
+  seed_ideas?: SeedIdea[];
+
   ai_generated: boolean;
   created_at: string;
   updated_at: string;
@@ -174,7 +257,7 @@ export interface UsageLog {
   project_id: string;
   operation_type: 'strategy_generation' | 'idea_generation' | 'shooting_guide_generation';
   provider: 'claude';
-  model: string; // 'claude-3-5-sonnet-20241022'
+  model: string; // 'claude-sonnet-5'
   input_tokens: number;
   output_tokens: number;
   api_call_count: number;
@@ -218,6 +301,7 @@ export interface StrategyGenerationRequest {
 
 // Strategy Generation Result (Editorial format)
 export interface StrategyResult {
+  // Phase 1 (Original)
   concept: string;
   targetAudience: string;
   contentPillars: string[];
@@ -226,6 +310,16 @@ export interface StrategyResult {
   visualDirection: string;
   monetizationCandidates: string[];
   kpi: Record<string, string | number>;
+
+  // Phase 2.1 (New)
+  editorialSummary?: string;
+  brandPositioning?: BrandPositioning;
+  personaDetails?: PersonaDetails;
+  accountNaming?: AccountNaming;
+  profileStrategy?: ProfileStrategy;
+  contentPillarsDetailed?: ContentPillarDetail[];
+  visualIdentity?: VisualIdentity;
+  seedIdeas?: SeedIdea[];
 }
 
 // Reference Account
