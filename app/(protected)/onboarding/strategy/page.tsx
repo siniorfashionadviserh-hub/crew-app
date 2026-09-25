@@ -14,7 +14,13 @@ export default function StrategyPage() {
   const [loading, setLoading] = useState(true); // Start as true (preparing state)
   const [error, setError] = useState('');
   const [debugError, setDebugError] = useState<any>(null);
-  const [debugSteps, setDebugSteps] = useState<Record<string, boolean | string>>({
+  const [debugSteps, setDebugSteps] = useState<Record<string, boolean | string | number>>({
+    build: '73d341a-auto-v1',
+    sessionLoaded: false,
+    accountIdAvailable: false,
+    autoTriggerReached: false,
+    apiCallStarted: false,
+    apiCallCount: 0,
     requestStarted: false,
     apiStatus: 'pending',
     strategySaved: false,
@@ -52,6 +58,7 @@ export default function StrategyPage() {
         }
 
         setSession(currentSession);
+        setDebugSteps(prev => ({ ...prev, sessionLoaded: true, accountIdAvailable: !!currentSession?.account_id }));
       } catch (err: any) {
         console.error('Session load error:', err);
         setError('セッションの読み込みに失敗しました');
@@ -65,6 +72,7 @@ export default function StrategyPage() {
   // Auto-trigger strategy generation after session loads (prevent double calls with useRef)
   useEffect(() => {
     if (session && !error && !apiCallRef.current) {
+      setDebugSteps(prev => ({ ...prev, autoTriggerReached: true }));
       apiCallRef.current = true;
       console.log('📝 Auto-starting strategy generation...');
       generateStrategy();
@@ -216,6 +224,9 @@ export default function StrategyPage() {
           setError('セッション情報が読み込まれていません。もう一度試してください。');
           return;
         }
+
+        // Mark API call as started
+        setDebugSteps(prev => ({ ...prev, apiCallStarted: true, apiCallCount: 1 }));
 
         // Call strategy generation API with Authorization header
         const response = await fetch('/api/strategy/generate', {
@@ -479,6 +490,16 @@ export default function StrategyPage() {
         <p style={{ color: 'var(--color-text-secondary)' }} className="mt-4 text-base">
           あなたのSNS設計を作成中...
         </p>
+
+        {/* Diagnostic Info - Temporary Debug Display */}
+        <div style={{backgroundColor: '#F0F4F8', border: '1px solid #90CAF9', color: '#1565C0', marginTop: '2rem', marginLeft: 'auto', marginRight: 'auto', maxWidth: '400px', padding: '12px', borderRadius: '8px', fontSize: '12px', fontFamily: 'monospace', textAlign: 'left'}}>
+          <div><strong>Build:</strong> {debugSteps.build}</div>
+          <div><strong>Session loaded:</strong> {debugSteps.sessionLoaded ? 'YES' : 'NO'}</div>
+          <div><strong>Account ID available:</strong> {debugSteps.accountIdAvailable ? 'YES' : 'NO'}</div>
+          <div><strong>Auto trigger reached:</strong> {debugSteps.autoTriggerReached ? 'YES' : 'NO'}</div>
+          <div><strong>API call started:</strong> {debugSteps.apiCallStarted ? 'YES' : 'NO'}</div>
+          <div><strong>API call count:</strong> {debugSteps.apiCallCount}/1</div>
+        </div>
       </div>
     );
   }
