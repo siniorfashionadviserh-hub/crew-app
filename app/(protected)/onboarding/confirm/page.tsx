@@ -128,7 +128,7 @@ export default function ConfirmPage() {
 
       const accountId = accountData[0].id;
 
-      // Update session with account_id and move to strategy generation
+      // Update session with account_id
       const { error: updateError } = await supabase
         .from('onboarding_sessions')
         .update({
@@ -148,8 +148,52 @@ export default function ConfirmPage() {
         throw updateError;
       }
 
-      // Redirect to strategy generation
-      router.push('/onboarding/strategy');
+      // Get access token for API authentication
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      const accessToken = authSession?.access_token;
+
+      if (!accessToken) {
+        setError('セッション情報が不足しています。再度ログインしてください。');
+        return;
+      }
+
+      // Call strategy generation API directly
+      const response = await fetch('/api/strategy/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          purpose: session.purpose,
+          genre: session.genre,
+          targetAgeGroup: session.target_age_group,
+          targetGender: session.target_gender,
+          targetPainPoint: session.target_pain_point,
+          creatorAgeGroup: session.creator_age_group,
+          canShowFace: session.can_show_face,
+          canUseVoice: session.can_use_voice,
+          postingFrequency: session.posting_frequency,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API /strategy/generate error:', {
+          status: response.status,
+          error: errorData,
+        });
+        setDebugError({
+          operation: 'POST /api/strategy/generate',
+          httpStatus: response.status,
+          message: errorData.error || 'Strategy generation failed',
+        });
+        setError('SNS設計の生成に失敗しました。もう一度試してください。');
+        return;
+      }
+
+      // Navigate to strategy result page
+      router.push('/onboarding/strategy-result');
     } catch (err: any) {
       console.error('Full error object:', err);
       setError('確認に失敗しました。もう一度試してください。');
